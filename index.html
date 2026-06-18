@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --coral: #FF385C;
+    --coral-light: #FF385C1A;
+    --coral-hover: #E31C5F;
+    --dark: #222222;
+    --grey-1: #717171;
+    --grey-2: #B0B0B0;
+    --grey-3: #DDDDDD;
+    --grey-4: #F7F7F7;
+    --white: #FFFFFF;
+    --green: #008A05;
+    --green-light: #008A051A;
+    --blue: #428BFF;
+    --blue-light: #428BFF1A;
+    --orange: #E07912;
+    --orange-light: #E079121A;
+    --purple: #914AE4;
+    --purple-light: #914AE41A;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.08);
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 28px rgba(0,0,0,0.12);
+    --transition: 0.2s cubic-bezier(0.2, 0, 0, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--white); color: var(--dark); -webkit-font-smoothing: antialiased; }
+
+  /* Header */
+  .header { border-bottom: 1px solid var(--grey-3); padding: 0 24px; position: sticky; top: 0; background: var(--white); z-index: 100; }
+  .header-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 32px; height: 32px; background: var(--coral); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .logo-icon svg { width: 18px; height: 18px; fill: white; }
+  .logo-text { font-size: 18px; font-weight: 700; color: var(--dark); }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .sync-status { font-size: 12px; color: var(--grey-1); display: flex; align-items: center; gap: 6px; }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .sync-dot.connected { background: var(--green); }
+  .sync-dot.offline { background: var(--grey-2); }
+  .settings-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--grey-3); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+  .settings-btn:hover { background: var(--grey-4); box-shadow: var(--shadow-sm); }
+  .settings-btn svg { width: 16px; height: 16px; fill: var(--dark); }
+
+  /* Tabs */
+  .tabs { border-bottom: 1px solid var(--grey-3); background: var(--white); }
+  .tabs-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; gap: 32px; }
+  .tab { padding: 16px 0; font-size: 14px; font-weight: 600; color: var(--grey-1); border: none; background: none; cursor: pointer; position: relative; transition: var(--transition); }
+  .tab:hover { color: var(--dark); }
+  .tab.active { color: var(--dark); }
+  .tab.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--dark); border-radius: 1px; }
+
+  .main { max-width: 1200px; margin: 0 auto; padding: 16px 24px; }
+
+  /* Stats row */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .stat-card { border: 1px solid var(--grey-3); border-radius: var(--radius); padding: 12px 14px; transition: var(--transition); }
+  .stat-card:hover { box-shadow: var(--shadow); }
+  .stat-label { font-size: 10px; font-weight: 600; color: var(--grey-1); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .stat-number { font-size: 24px; font-weight: 800; line-height: 1; }
+  .stat-sub { font-size: 10px; color: var(--grey-1); margin-top: 2px; }
+  .stat-card.surbhi { border-color: #914AE433; }
+  .stat-card.surbhi .stat-number { color: var(--purple); }
+  .stat-card.ishan { border-color: #428BFF33; }
+  .stat-card.ishan .stat-number { color: var(--blue); }
+  .stat-card.critical { border-color: #FF385C33; }
+  .stat-card.critical .stat-number { color: var(--coral); }
+  .stat-card.done { border-color: #008A0533; }
+  .stat-card.done .stat-number { color: var(--green); }
+
+  /* Toolbar */
+  .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .search-box { flex: 1; min-width: 200px; position: relative; }
+  .search-box input { width: 100%; padding: 10px 14px 10px 40px; border: 1px solid var(--grey-3); border-radius: 40px; font-size: 14px; font-family: inherit; background: var(--grey-4); transition: var(--transition); }
+  .search-box input:focus { outline: none; border-color: var(--dark); background: var(--white); box-shadow: 0 0 0 2px rgba(34,34,34,0.1); }
+  .search-box svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; fill: var(--grey-1); }
+  .filter-pill { padding: 8px 16px; border: 1px solid var(--grey-3); border-radius: 40px; font-size: 13px; font-family: inherit; font-weight: 500; background: var(--white); cursor: pointer; transition: var(--transition); appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23717171'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+  .filter-pill:focus { outline: none; border-color: var(--dark); }
+  .filter-pill:hover { border-color: var(--dark); }
+  .sort-pill { padding: 8px 16px; border: 1px solid var(--dark); border-radius: 40px; font-size: 13px; font-family: inherit; font-weight: 600; background: var(--dark); color: var(--white); cursor: pointer; transition: var(--transition); appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='white'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+  .sort-pill:focus { outline: none; }
+  .sort-dir { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--grey-3); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); font-size: 14px; }
+  .sort-dir:hover { border-color: var(--dark); background: var(--grey-4); }
+  .sort-dir.desc { transform: rotate(180deg); }
+  .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-family: inherit; font-weight: 600; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--coral); color: var(--white); }
+  .btn-primary:hover { background: var(--coral-hover); transform: scale(1.02); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-outline { background: var(--white); color: var(--dark); border: 1px solid var(--grey-3); }
+  .btn-outline:hover { border-color: var(--dark); }
+  .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 6px; }
+  .btn-icon { width: 26px; height: 26px; border-radius: 50%; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+  .btn-icon:hover { background: var(--grey-4); }
+  .btn-icon svg { width: 14px; height: 14px; fill: var(--grey-1); }
+  .btn-icon.danger:hover { background: #FF385C1A; }
+  .btn-icon.danger:hover svg { fill: var(--coral); }
+  .btn-icon.success:hover { background: var(--green-light); }
+  .btn-icon.success:hover svg { fill: var(--green); }
+
+  /* Cards list */
+  .task-list { display: flex; flex-direction: column; gap: 1px; background: var(--grey-3); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--grey-3); }
+  .task-card { background: var(--white); padding: 8px 16px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; transition: var(--transition); cursor: default; }
+  .task-card:hover { background: var(--grey-4); }
+  .task-card.done-row { opacity: 0.5; }
+  .task-card.done-row .task-name { text-decoration: line-through; }
+  .task-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .task-top { display: flex; align-items: center; gap: 8px; }
+  .task-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .task-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .task-right { display: flex; align-items: center; gap: 4px; }
+
+  /* Badges */
+  .pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; letter-spacing: 0.2px; }
+  .pill-surbhi { background: var(--purple-light); color: var(--purple); }
+  .pill-ishan { background: var(--blue-light); color: var(--blue); }
+  .pill-both { background: var(--orange-light); color: var(--orange); }
+  .pill-todo { background: var(--orange-light); color: var(--orange); }
+  .pill-inprogress { background: var(--blue-light); color: var(--blue); }
+  .pill-done { background: var(--green-light); color: var(--green); }
+  .pill-cat { background: var(--grey-4); color: var(--grey-1); }
+
+  .crit-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .crit-5 { background: #FF385C; box-shadow: 0 0 0 2px #FF385C33; }
+  .crit-4 { background: #E07912; box-shadow: 0 0 0 2px #E0791233; }
+  .crit-3 { background: #F5C518; box-shadow: 0 0 0 2px #F5C51833; }
+  .crit-2 { background: #82E0AA; box-shadow: 0 0 0 2px #82E0AA33; }
+  .crit-1 { background: #B0B0B0; box-shadow: 0 0 0 2px #B0B0B033; }
+
+  .date-text { font-size: 11px; color: var(--grey-1); }
+  .date-text.overdue { color: var(--coral); font-weight: 600; }
+  .date-text.today { color: var(--orange); font-weight: 600; }
+  .date-text.soon { color: var(--blue); }
+  .notes-text { font-size: 11px; color: var(--grey-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+
+  /* Modal */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: flex-end; justify-content: center; }
+  .overlay.show { display: flex; }
+  @media (min-width: 601px) { .overlay { align-items: center; } }
+  .modal { background: var(--white); border-radius: 16px 16px 0 0; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s cubic-bezier(0.2, 0, 0, 1); }
+  @media (min-width: 601px) { .modal { border-radius: var(--radius-lg); } }
+  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--grey-3); display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h2 { font-size: 16px; font-weight: 700; }
+  .modal-close { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--grey-4); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: var(--transition); }
+  .modal-close:hover { background: var(--grey-3); }
+  .modal-body { padding: 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--grey-3); display: flex; justify-content: flex-end; gap: 8px; }
+
+  .field { margin-bottom: 20px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: var(--dark); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 12px 14px; border: 1px solid var(--grey-3); border-radius: 8px;
+    font-size: 15px; font-family: inherit; transition: var(--transition);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--dark); box-shadow: 0 0 0 2px rgba(34,34,34,0.1); }
+  .field textarea { resize: vertical; min-height: 70px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* Settings panel */
+  .settings-panel { display: none; position: fixed; top: 64px; right: 24px; width: 360px; background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); z-index: 150; border: 1px solid var(--grey-3); }
+  .settings-panel.show { display: block; animation: slideUp 0.2s ease; }
+  .settings-panel .modal-header { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+  .settings-panel .modal-body input { width: 100%; padding: 10px 12px; border: 1px solid var(--grey-3); border-radius: 8px; font-size: 13px; font-family: inherit; }
+  .settings-panel .modal-body input:focus { outline: none; border-color: var(--dark); }
+  .settings-help { font-size: 12px; color: var(--grey-1); margin-top: 6px; line-height: 1.5; }
+
+  /* Calendar */
+  .cal-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .cal-nav { display: flex; align-items: center; gap: 6px; }
+  .cal-nav-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--grey-3); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: var(--transition); }
+  .cal-nav-btn:hover { border-color: var(--dark); background: var(--grey-4); }
+  .cal-title { font-size: 16px; font-weight: 700; min-width: 160px; text-align: center; }
+  .cal-today-btn { padding: 6px 14px; border: 1px solid var(--grey-3); border-radius: 20px; background: var(--white); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); }
+  .cal-today-btn:hover { border-color: var(--dark); }
+  .cal-view-toggle { display: flex; border: 1px solid var(--grey-3); border-radius: 8px; overflow: hidden; margin-left: auto; }
+  .cal-view-btn { padding: 6px 14px; border: none; background: var(--white); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); font-family: inherit; }
+  .cal-view-btn.active { background: var(--dark); color: var(--white); }
+  .cal-view-btn:hover:not(.active) { background: var(--grey-4); }
+
+  .cal-grid { border: 1px solid var(--grey-3); border-radius: var(--radius); overflow: hidden; }
+  .cal-header-row { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--grey-4); }
+  .cal-header-cell { padding: 8px 4px; text-align: center; font-size: 11px; font-weight: 700; color: var(--grey-1); text-transform: uppercase; letter-spacing: 0.5px; }
+  .cal-body { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cal-day { min-height: 80px; border-top: 1px solid var(--grey-3); border-right: 1px solid var(--grey-3); padding: 4px; position: relative; cursor: pointer; transition: var(--transition); }
+  .cal-day:nth-child(7n) { border-right: none; }
+  .cal-day:hover { background: var(--grey-4); }
+  .cal-day.other-month { background: #FAFAFA; }
+  .cal-day.other-month .cal-day-num { color: var(--grey-2); }
+  .cal-day.today { background: #FFF5F5; }
+  .cal-day.today .cal-day-num { background: var(--coral); color: var(--white); }
+  .cal-day-num { font-size: 11px; font-weight: 600; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin-bottom: 2px; }
+  .cal-event { font-size: 10px; padding: 2px 4px; border-radius: 4px; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; font-weight: 500; }
+  .cal-event.surbhi { background: var(--purple-light); color: var(--purple); }
+  .cal-event.ishan { background: var(--blue-light); color: var(--blue); }
+  .cal-event.both { background: var(--orange-light); color: var(--orange); }
+  .cal-event.chore { background: var(--grey-4); color: var(--grey-1); border-left: 2px solid var(--grey-2); }
+  .cal-event:hover { opacity: 0.8; }
+  .cal-more { font-size: 9px; color: var(--grey-1); font-weight: 600; padding: 1px 4px; cursor: pointer; }
+  .cal-more:hover { color: var(--dark); }
+
+  /* Week view */
+  .cal-week { border: 1px solid var(--grey-3); border-radius: var(--radius); overflow: hidden; }
+  .cal-week-header { display: grid; grid-template-columns: 56px repeat(7, 1fr); background: var(--grey-4); }
+  .cal-week-hcell { padding: 8px 4px; text-align: center; font-size: 11px; font-weight: 600; color: var(--grey-1); border-right: 1px solid var(--grey-3); }
+  .cal-week-hcell:last-child { border-right: none; }
+  .cal-week-hcell.time-label { font-size: 9px; display: flex; align-items: center; justify-content: center; }
+  .cal-week-hcell .day-name { text-transform: uppercase; letter-spacing: 0.5px; font-size: 10px; }
+  .cal-week-hcell .day-num { font-size: 20px; font-weight: 800; color: var(--dark); margin-top: 2px; }
+  .cal-week-hcell.today .day-num { color: var(--coral); }
+  .cal-week-body { display: grid; grid-template-columns: 56px repeat(7, 1fr); }
+  .cal-week-time-col { display: flex; flex-direction: column; }
+  .cal-week-time-label { height: 60px; font-size: 10px; font-weight: 600; color: var(--grey-1); padding: 4px 6px; text-align: right; border-top: 1px solid var(--grey-3); border-right: 1px solid var(--grey-3); display: flex; align-items: flex-start; justify-content: flex-end; }
+  .cal-week-col { border-right: 1px solid var(--grey-3); display: flex; flex-direction: column; }
+  .cal-week-col:last-child { border-right: none; }
+  .cal-week-col.today { background: #FFF5F5; }
+  .cal-week-slot { height: 60px; border-top: 1px solid var(--grey-3); padding: 2px 3px; position: relative; display: flex; flex-direction: column; gap: 1px; }
+  .cal-week-slot:hover { background: rgba(0,0,0,0.02); }
+  .cal-week-event { font-size: 10px; padding: 3px 5px; border-radius: 4px; font-weight: 500; cursor: pointer; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cal-week-event .ev-time { font-size: 9px; font-weight: 700; }
+  .cal-week-event .ev-loc { font-size: 8px; opacity: 0.7; }
+  .cal-week-event.surbhi { background: var(--purple-light); color: var(--purple); }
+  .cal-week-event.ishan { background: var(--blue-light); color: var(--blue); }
+  .cal-week-event.both { background: var(--orange-light); color: var(--orange); }
+  .cal-week-event:hover { opacity: 0.8; }
+
+  .empty-state { text-align: center; padding: 80px 20px; }
+  .empty-state svg { width: 64px; height: 64px; fill: var(--grey-2); margin-bottom: 16px; }
+  .empty-state h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .empty-state p { font-size: 14px; color: var(--grey-1); }
+
+  .loading-bar { height: 2px; background: var(--coral); position: fixed; top: 64px; left: 0; z-index: 101; animation: loadSlide 1.5s infinite; display: none; }
+  .loading-bar.show { display: block; }
+  @keyframes loadSlide { 0% { width: 0; } 50% { width: 60%; } 100% { width: 100%; opacity: 0; } }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  @media (max-width: 600px) {
+    .header-inner { height: 56px; }
+    .logo-text { font-size: 16px; }
+    .main { padding: 16px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-card { padding: 14px; }
+    .stat-number { font-size: 26px; }
+    .task-card { padding: 14px 16px; }
+    .task-meta { gap: 6px; }
+    .notes-text { max-width: 150px; }
+    .field-row { grid-template-columns: 1fr; }
+    .settings-panel { right: 8px; left: 8px; width: auto; }
+    .tabs-inner { gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-bar" id="loading"></div>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
+      <span class="logo-text">Family Tracker</span>
+    </div>
+    <div class="header-right">
+      <div class="sync-status"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">Offline</span></div>
+      <button class="settings-btn" onclick="toggleSettings()" title="Settings">
+        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="settings-panel" id="settings-panel">
+  <div class="modal-header">
+    <h2>Google Sheets Sync</h2>
+    <button class="modal-close" onclick="toggleSettings()">&times;</button>
+  </div>
+  <div class="modal-body">
+    <div class="field">
+      <label>Apps Script Web App URL</label>
+      <input id="script-url" placeholder="https://script.google.com/macros/s/..." value="">
+      <div class="settings-help">
+        Open your Google Sheet &rarr; Extensions &rarr; Apps Script &rarr; paste the code from "Family Tracker Apps Script.js" &rarr; Deploy as Web App &rarr; paste the URL here.
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-sm" onclick="connectSheet()">Connect</button>
+      <button class="btn btn-outline btn-sm" onclick="syncNow()">Sync Now</button>
+    </div>
+    <div id="settings-msg" style="margin-top:12px;font-size:13px;"></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tabs-inner">
+    <button class="tab active" data-tab="chores" onclick="switchTab('chores')">Chores & Tasks</button>
+    <button class="tab" data-tab="events" onclick="switchTab('events')">Social Calendar</button>
+    <button class="tab" data-tab="orders" onclick="switchTab('orders')">Things to Order</button>
+  </div>
+</div>
+
+<div class="main">
+  <!-- Dashboard -->
+  <div class="stats-row" id="stats"></div>
+
+  <!-- Chores Tab -->
+  <div class="tab-content active" id="tab-chores">
+    <div class="toolbar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input id="search" placeholder="Search tasks..." oninput="renderChores()">
+      </div>
+      <select class="filter-pill" id="filter-owner" onchange="renderChores()"><option value="">All owners</option><option>Surbhi</option><option>Ishan</option></select>
+      <select class="filter-pill" id="filter-status" onchange="renderChores()"><option value="">All status</option><option>To Do</option><option>In Progress</option><option>Done</option></select>
+      <select class="filter-pill" id="filter-cat" onchange="renderChores()"><option value="">All categories</option></select>
+      <select class="sort-pill" id="sort-by" onchange="changeSort(this.value)">
+        <option value="due">Sort: Due date</option>
+        <option value="criticality">Sort: Criticality</option>
+        <option value="owner">Sort: Owner</option>
+      </select>
+      <button class="sort-dir" id="sort-dir-btn" onclick="toggleSortDir()" title="Toggle sort direction">&#8593;</button>
+      <button class="btn btn-primary" onclick="openChoreModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Add task
+      </button>
+    </div>
+    <div id="chore-list"></div>
+  </div>
+
+  <!-- Events Tab — Calendar View -->
+  <div class="tab-content" id="tab-events">
+    <div style="margin-bottom:12px">
+      <div class="search-box" style="min-width:100%">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        <input id="quick-add-event" placeholder="e.g. Dinner with Rahool Saturday 7pm at their place" onkeydown="if(event.key==='Enter')quickAddEvent()" style="padding-right:14px">
+      </div>
+    </div>
+    <div class="cal-toolbar">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calNav(-1)">&larr;</button>
+        <span class="cal-title" id="cal-title"></span>
+        <button class="cal-nav-btn" onclick="calNav(1)">&rarr;</button>
+      </div>
+      <button class="cal-today-btn" onclick="calToday()">Today</button>
+      <select class="filter-pill" id="filter-who" onchange="renderCalendar()"><option value="">Everyone</option><option>Surbhi</option><option>Ishan</option><option>Both</option></select>
+      <div class="cal-view-toggle">
+        <button class="cal-view-btn active" data-view="month" onclick="setCalView('month')">Month</button>
+        <button class="cal-view-btn" data-view="week" onclick="setCalView('week')">Week</button>
+      </div>
+    </div>
+    <div id="cal-container"></div>
+  </div>
+
+  <!-- Orders Tab -->
+  <div class="tab-content" id="tab-orders">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <!-- Non-Grocery -->
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <h3 style="font-size:14px;font-weight:700;flex-shrink:0">Shopping List</h3>
+          <div class="search-box" style="flex:1">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <input id="quick-add-order" placeholder="Add item + Enter..." onkeydown="if(event.key==='Enter')quickAddOrder()" style="font-size:13px;padding:8px 12px 8px 36px">
+          </div>
+        </div>
+        <div id="order-list-nongrocery"></div>
+      </div>
+      <!-- Grocery -->
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <h3 style="font-size:14px;font-weight:700;flex-shrink:0">Grocery List</h3>
+          <div class="search-box" style="flex:1">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <input id="quick-add-grocery" placeholder="Add grocery + Enter..." onkeydown="if(event.key==='Enter')quickAddGrocery()" style="font-size:13px;padding:8px 12px 8px 36px">
+          </div>
+        </div>
+        <div id="order-list-grocery"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chore Modal -->
+<div class="overlay" id="chore-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="chore-modal-title">Add task</h2>
+      <button class="modal-close" onclick="closeModal('chore-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="chore-edit-id">
+      <div class="field"><label>Task name</label><input id="f-task" placeholder="What needs to be done?"></div>
+      <div class="field-row">
+        <div class="field"><label>Category</label>
+          <select id="f-cat"><option>Household</option><option>Grocery</option><option>Cooking</option><option>Cleaning</option><option>Laundry</option><option>Finance</option><option>Admin</option><option>Roohi - School</option><option>Roohi - Health</option><option>Roohi - Activities</option><option>Other</option></select>
+        </div>
+        <div class="field"><label>Owner</label><select id="f-owner"><option>Surbhi</option><option>Ishan</option></select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Due date</label><input type="date" id="f-due"></div>
+        <div class="field-row">
+          <div class="field"><label>Priority</label><select id="f-crit"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div>
+          <div class="field"><label>Status</label><select id="f-status"><option>To Do</option><option>In Progress</option><option>Done</option></select></div>
+        </div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="f-notes" placeholder="Any additional details..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('chore-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveChore()">Save task</button>
+    </div>
+  </div>
+</div>
+
+<!-- Event Modal -->
+<div class="overlay" id="event-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="event-modal-title">Add event</h2>
+      <button class="modal-close" onclick="closeModal('event-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="event-edit-id">
+      <div class="field"><label>What</label><input id="f-event" placeholder="e.g. Dinner with Rahool Gadkari"></div>
+      <div class="field-row">
+        <div class="field"><label>Date</label><input type="date" id="f-edate"></div>
+        <div class="field"><label>Time</label><input type="time" id="f-etime"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Where</label><input id="f-eloc" placeholder="e.g. Restaurant, their place, our place"></div>
+        <div class="field"><label>With</label><select id="f-ewho"><option>Surbhi</option><option>Ishan</option><option>Both</option></select></div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="f-enotes" placeholder="e.g. Bring wine, allergies, kids coming too..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('event-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEvent()">Save event</button>
+    </div>
+  </div>
+</div>
+
+<!-- Order Modal -->
+<div class="overlay" id="order-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="order-modal-title">Add item</h2>
+      <button class="modal-close" onclick="closeModal('order-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="order-edit-id">
+      <div class="field"><label>Item</label><input id="f-oitem" placeholder="e.g. Diapers size 4, Vitamin D drops"></div>
+      <div class="field-row">
+        <div class="field"><label>Category</label>
+          <select id="f-ocat"><option>Baby & Kids</option><option>Grocery</option><option>Household</option><option>Electronics</option><option>Clothing</option><option>Health</option><option>Kitchen</option><option>Other</option></select>
+        </div>
+        <div class="field"><label>Priority</label>
+          <select id="f-opri"><option value="high">High — need ASAP</option><option value="medium" selected>Medium</option><option value="low">Low — whenever</option></select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Where to buy</label><input id="f-owhere" placeholder="e.g. Amazon, Costco, Target"></div>
+        <div class="field"><label>Status</label>
+          <select id="f-ostatus"><option value="pending">Pending</option><option value="ordered">Ordered</option><option value="delivered">Delivered</option></select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Est. price</label><input id="f-oprice" placeholder="$" type="text"></div>
+        <div class="field"><label>Assigned to</label><select id="f-oowner"><option>Surbhi</option><option>Ishan</option></select></div>
+      </div>
+      <div class="field"><label>Link / Notes</label><textarea id="f-onotes" placeholder="Paste product link or add notes..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('order-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveOrder()">Save item</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LS_CHORES = 'ft_chores', LS_EVENTS = 'ft_events', LS_ORDERS = 'ft_orders', LS_URL = 'ft_script_url';
+const CATS = ['Household','Grocery','Cooking','Cleaning','Laundry','Finance','Admin','Roohi - School','Roohi - Health','Roohi - Activities','Other'];
+
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function d(n) { const dt = new Date(); dt.setDate(dt.getDate() + n); return dt.toISOString().split('T')[0]; }
+function esc(s) { const el = document.createElement('span'); el.textContent = s || ''; return el.innerHTML; }
+function nextId(arr) { return arr.length ? Math.max(...arr.map(i => i.id || 0)) + 1 : 1; }
+
+const SEED_CHORES = [
+  {id:1,task:'Grocery shopping - weekly',category:'Grocery',owner:'Surbhi',due:d(2),criticality:4,status:'To Do',notes:'Costco run - diapers, fruits, milk'},
+  {id:2,task:'Pay electricity bill',category:'Finance',owner:'Ishan',due:d(5),criticality:5,status:'To Do',notes:'Due by June 23'},
+  {id:3,task:'Laundry - whites & darks',category:'Laundry',owner:'Ishan',due:d(1),criticality:3,status:'In Progress',notes:''},
+  {id:4,task:'Roohi school pickup schedule',category:'Roohi - School',owner:'Surbhi',due:todayStr(),criticality:5,status:'Done',notes:'Confirmed summer schedule'},
+  {id:5,task:'Deep clean kitchen',category:'Cleaning',owner:'Surbhi',due:d(7),criticality:3,status:'To Do',notes:'Including oven and fridge'},
+  {id:6,task:'Roohi pediatrician appointment',category:'Roohi - Health',owner:'Ishan',due:d(10),criticality:5,status:'To Do',notes:'6-month checkup'},
+  {id:7,task:'Fix leaking bathroom faucet',category:'Household',owner:'Ishan',due:d(4),criticality:4,status:'To Do',notes:'Call plumber if needed'},
+  {id:8,task:'Roohi swimming class enrollment',category:'Roohi - Activities',owner:'Surbhi',due:d(3),criticality:3,status:'In Progress',notes:'Check YMCA schedule'},
+  {id:9,task:'Meal prep for the week',category:'Cooking',owner:'Surbhi',due:d(1),criticality:4,status:'To Do',notes:'Dal, rice, sabzi for weekdays'},
+  {id:10,task:'Car insurance renewal',category:'Finance',owner:'Ishan',due:d(14),criticality:5,status:'To Do',notes:'Compare quotes online'},
+  {id:11,task:'Roohi passport renewal',category:'Admin',owner:'Surbhi',due:d(21),criticality:4,status:'To Do',notes:'Need new photos'},
+  {id:12,task:'Vacuum all rooms',category:'Cleaning',owner:'Ishan',due:d(2),criticality:2,status:'To Do',notes:''},
+  {id:13,task:'Order Roohi school supplies',category:'Roohi - School',owner:'Surbhi',due:d(8),criticality:3,status:'To Do',notes:'Check list from teacher'},
+  {id:14,task:'Organize garage',category:'Household',owner:'Ishan',due:d(12),criticality:1,status:'To Do',notes:'Donate old stuff'},
+  {id:15,task:'Roohi dance recital prep',category:'Roohi - Activities',owner:'Surbhi',due:d(6),criticality:4,status:'In Progress',notes:'Costume ready, practice steps'},
+];
+const SEED_EVENTS = [
+  {id:1,event:'Dinner with Rahool Gadkari',date:d(3),time:'19:00',location:'Their place',who:'Both',notes:'Bring wine, kids are welcome'},
+  {id:2,event:'Coffee with Priya & Ankit',date:d(5),time:'10:30',location:'Blue Bottle Coffee',who:'Surbhi',notes:'Catch up after their trip'},
+  {id:3,event:'BBQ at Sharma house',date:d(7),time:'16:00',location:"Sharma's backyard",who:'Both',notes:'Potluck — bring dessert'},
+  {id:4,event:'Roohi playdate - Aarav',date:d(9),time:'15:00',location:"Aarav's house",who:'Ishan',notes:'Pick up by 5pm'},
+  {id:5,event:'Brunch with college friends',date:d(12),time:'11:00',location:'The Breakfast Club',who:'Both',notes:'Reservation under Surbhi, 6 people'},
+  {id:6,event:'Movie night with Malhar & Swati',date:d(14),time:'19:30',location:'Our place',who:'Both',notes:'They pick the movie, we do popcorn'},
+  {id:7,event:'Roohi birthday party planning',date:d(18),time:'14:00',location:'Home',who:'Both',notes:'Finalize theme, guest list, cake order'},
+  {id:8,event:'Drinks with Ishan work friends',date:d(20),time:'18:00',location:'The Pint Room',who:'Ishan',notes:''},
+];
+
+const ORDER_CATS = ['Baby & Kids','Grocery','Household','Electronics','Clothing','Health','Kitchen','Other'];
+const SEED_ORDERS = [
+  {id:1,item:'Diapers size 4 (box)',category:'Baby & Kids',priority:'high',where:'Costco',status:'pending',price:'$42',owner:'Surbhi',notes:'Pampers Swaddlers'},
+  {id:2,item:'Vitamin D drops for Roohi',category:'Health',priority:'high',where:'Amazon',status:'ordered',price:'$12',owner:'Ishan',notes:'Doctor recommended brand'},
+  {id:3,item:'Air purifier filter replacement',category:'Household',priority:'medium',where:'Amazon',status:'pending',price:'$35',owner:'Ishan',notes:'Model: Levoit Core 300'},
+  {id:4,item:'Roohi summer clothes (12-18m)',category:'Clothing',priority:'medium',where:'Target',status:'pending',price:'$60',owner:'Surbhi',notes:'Onesies, shorts, sun hat'},
+  {id:5,item:'Olive oil & spices restock',category:'Grocery',priority:'low',where:'Costco',status:'pending',price:'$25',owner:'Surbhi',notes:'Cumin, turmeric, garam masala'},
+  {id:6,item:'Baby monitor replacement',category:'Electronics',priority:'high',where:'Amazon',status:'ordered',price:'$80',owner:'Ishan',notes:'Current one has static issues'},
+  {id:7,item:'Stroller rain cover',category:'Baby & Kids',priority:'low',where:'Amazon',status:'delivered',price:'$18',owner:'Surbhi',notes:'Universal fit'},
+  {id:8,item:'Kitchen sponges & dish soap',category:'Kitchen',priority:'medium',where:'Target',status:'pending',price:'$10',owner:'Ishan',notes:''},
+];
+
+function load(key, seed) { const s = localStorage.getItem(key); if (s) return JSON.parse(s); save(key, seed); return [...seed]; }
+function save(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+
+let chores = load(LS_CHORES, SEED_CHORES);
+let events = load(LS_EVENTS, SEED_EVENTS);
+let orders = load(LS_ORDERS, SEED_ORDERS);
+let scriptUrl = localStorage.getItem(LS_URL) || '';
+let sortKey = 'due', sortAsc = true;
+
+function changeSort(key) {
+  sortKey = key;
+  if (key === 'criticality') sortAsc = false;
+  else sortAsc = true;
+  updateSortDirBtn();
+  renderChores();
+}
+function toggleSortDir() {
+  sortAsc = !sortAsc;
+  updateSortDirBtn();
+  renderChores();
+}
+function updateSortDirBtn() {
+  var btn = document.getElementById('sort-dir-btn');
+  btn.innerHTML = sortAsc ? '&#8593;' : '&#8595;';
+  btn.title = sortAsc ? 'Ascending (click to reverse)' : 'Descending (click to reverse)';
+}
+
+// --- Google Sheets Sync ---
+function showLoading(on) { document.getElementById('loading').classList.toggle('show', on); }
+function updateSyncStatus(connected) {
+  document.getElementById('sync-dot').className = 'sync-dot ' + (connected ? 'connected' : 'offline');
+  document.getElementById('sync-label').textContent = connected ? 'Synced' : 'Offline';
+}
+
+function apiCall(params) {
+  if (!scriptUrl) return Promise.resolve(null);
+  showLoading(true);
+  return new Promise(function(resolve) {
+    var callbackName = '_cb_' + Math.random().toString(36).slice(2);
+    var qs = '?action=' + encodeURIComponent(params.action);
+    if (params.data) qs += '&data=' + encodeURIComponent(JSON.stringify(params.data));
+    if (params.rowIndex) qs += '&rowIndex=' + encodeURIComponent(params.rowIndex);
+    qs += '&callback=' + callbackName;
+
+    window[callbackName] = function(data) {
+      showLoading(false);
+      delete window[callbackName];
+      document.getElementById(callbackName).remove();
+      resolve(data);
+    };
+
+    var iframe = document.createElement('iframe');
+    iframe.id = callbackName;
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    var url = scriptUrl + qs;
+    fetch(url, { redirect: 'follow' })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        showLoading(false);
+        if (document.getElementById(callbackName)) document.getElementById(callbackName).remove();
+        delete window[callbackName];
+        resolve(data);
+      })
+      .catch(function() {
+        showLoading(false);
+        if (document.getElementById(callbackName)) document.getElementById(callbackName).remove();
+        delete window[callbackName];
+        resolve(null);
+      });
+  });
+}
+
+async function connectSheet() {
+  const url = document.getElementById('script-url').value.trim();
+  if (!url) { showMsg('Please enter a URL', true); return; }
+  scriptUrl = url;
+  localStorage.setItem(LS_URL, url);
+  showMsg('Testing connection...');
+  const res = await apiCall({ action: 'ping' });
+  if (res && res.status === 'ok') {
+    showMsg('Connected! Sheets found: ' + res.sheets.join(', '), false);
+    updateSyncStatus(true);
+    syncNow();
+  } else {
+    showMsg('Could not connect. Check the URL and deploy settings.', true);
+    updateSyncStatus(false);
+  }
+}
+
+async function syncNow() {
+  if (!scriptUrl) { showMsg('Set the Apps Script URL first', true); return; }
+  showMsg('Syncing...');
+
+  const choreData = await apiCall({ action: 'getChores' });
+  if (choreData && choreData.rows) {
+    chores = choreData.rows.map((r, i) => ({
+      id: r._rowIndex,
+      task: r['Task'] || '',
+      category: r['Category'] || '',
+      owner: r['Owner'] || '',
+      due: r['Due Date'] || '',
+      criticality: parseInt(r['Criticality']) || 3,
+      status: r['Status'] || 'To Do',
+      notes: r['Notes'] || '',
+      _rowIndex: r._rowIndex
+    }));
+    save(LS_CHORES, chores);
+  }
+
+  const eventData = await apiCall({ action: 'getEvents' });
+  if (eventData && eventData.rows) {
+    events = eventData.rows.map((r, i) => ({
+      id: r._rowIndex,
+      event: r['Event'] || '',
+      date: r['Date'] || '',
+      time: r['Time'] || '',
+      location: r['Location'] || '',
+      who: r["Who's Taking Her"] || r['Who'] || '',
+      notes: r['Notes'] || '',
+      _rowIndex: r._rowIndex
+    }));
+    save(LS_EVENTS, events);
+  }
+
+  updateSyncStatus(true);
+  showMsg('Synced successfully!');
+  renderAll();
+}
+
+async function pushChore(action, chore, rowIndex) {
+  if (!scriptUrl) return;
+  const data = { 'Task': chore.task, 'Category': chore.category, 'Owner': chore.owner, 'Due Date': chore.due, 'Criticality': chore.criticality, 'Status': chore.status, 'Notes': chore.notes };
+  if (action === 'add') return await apiCall({ action: 'addChore', data });
+  if (action === 'update') return await apiCall({ action: 'updateChore', rowIndex, data });
+  if (action === 'delete') return await apiCall({ action: 'deleteChore', rowIndex });
+}
+
+async function pushEvent(action, evt, rowIndex) {
+  if (!scriptUrl) return;
+  const data = { 'Event': evt.event, 'Date': evt.date, 'Time': evt.time, 'Location': evt.location, "Who's Taking Her": evt.who, 'Notes': evt.notes };
+  if (action === 'add') return await apiCall({ action: 'addEvent', data });
+  if (action === 'update') return await apiCall({ action: 'updateEvent', rowIndex, data });
+  if (action === 'delete') return await apiCall({ action: 'deleteEvent', rowIndex });
+}
+
+function showMsg(msg, isError) {
+  const el = document.getElementById('settings-msg');
+  el.textContent = msg;
+  el.style.color = isError ? 'var(--coral)' : 'var(--green)';
+}
+
+// --- Rendering ---
+function fmtDate(ds) {
+  if (!ds) return '';
+  const dt = new Date(ds + 'T00:00:00');
+  const t = new Date(todayStr() + 'T00:00:00');
+  const diff = Math.round((dt - t) / 86400000);
+  const str = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (diff < 0) return `<span class="date-text overdue">${str} (overdue)</span>`;
+  if (diff === 0) return `<span class="date-text today">${str} (today)</span>`;
+  if (diff <= 3) return `<span class="date-text soon">${str}</span>`;
+  return `<span class="date-text">${str}</span>`;
+}
+function fmtTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':');
+  const hr = parseInt(h);
+  return `${hr > 12 ? hr - 12 : hr || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`;
+}
+function ownerPill(o) { return `<span class="pill pill-${(o||'').toLowerCase()}">${esc(o)}</span>`; }
+function statusPill(s) { const cls = (s||'').replace(/\s/g,'').toLowerCase(); return `<span class="pill pill-${cls}">${esc(s)}</span>`; }
+
+function renderStats() {
+  const active = chores.filter(c => c.status !== 'Done');
+  const s = active.filter(c => c.owner === 'Surbhi').length;
+  const i = active.filter(c => c.owner === 'Ishan').length;
+  const crit = active.filter(c => c.criticality >= 4).length;
+  const done = chores.filter(c => c.status === 'Done').length;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-card surbhi"><div class="stat-label">Surbhi</div><div class="stat-number">${s}</div><div class="stat-sub">active tasks</div></div>
+    <div class="stat-card ishan"><div class="stat-label">Ishan</div><div class="stat-number">${i}</div><div class="stat-sub">active tasks</div></div>
+    <div class="stat-card critical"><div class="stat-label">Urgent</div><div class="stat-number">${crit}</div><div class="stat-sub">priority 4-5</div></div>
+    <div class="stat-card done"><div class="stat-label">Done</div><div class="stat-number">${done}</div><div class="stat-sub">completed</div></div>
+  `;
+}
+
+function getFilteredChores() {
+  let list = [...chores];
+  const q = document.getElementById('search').value.toLowerCase();
+  const fo = document.getElementById('filter-owner').value;
+  const fs = document.getElementById('filter-status').value;
+  const fc = document.getElementById('filter-cat').value;
+  if (q) list = list.filter(c => c.task.toLowerCase().includes(q) || (c.notes||'').toLowerCase().includes(q));
+  if (fo) list = list.filter(c => c.owner === fo);
+  if (fs) list = list.filter(c => c.status === fs);
+  if (fc) list = list.filter(c => c.category === fc);
+  list.sort((a, b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if (sortKey === 'criticality') { av = Number(av); bv = Number(bv); }
+    return (av < bv ? -1 : av > bv ? 1 : 0) * (sortAsc ? 1 : -1);
+  });
+  return list;
+}
+
+function renderChores() {
+  const list = getFilteredChores();
+  const el = document.getElementById('chore-list');
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg><h3>All clear!</h3><p>No tasks match your filters</p></div>';
+    return;
+  }
+  el.innerHTML = '<div class="task-list">' + list.map(c => `
+    <div class="task-card ${c.status==='Done'?'done-row':''}">
+      <div class="task-left">
+        <div class="task-top">
+          <span class="crit-dot crit-${c.criticality}" title="Priority ${c.criticality}"></span>
+          <span class="task-name">${esc(c.task)}</span>
+        </div>
+        <div class="task-meta">
+          ${ownerPill(c.owner)}
+          <span class="pill pill-cat">${esc(c.category)}</span>
+          ${statusPill(c.status)}
+          ${fmtDate(c.due)}
+          ${c.notes ? `<span class="notes-text">${esc(c.notes)}</span>` : ''}
+        </div>
+      </div>
+      <div class="task-right">
+        ${c.status !== 'Done' ? `<button class="btn-icon success" onclick="markDone(${c.id})" title="Mark done"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></button>` : ''}
+        <button class="btn-icon" onclick="editChore(${c.id})" title="Edit"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+        <button class="btn-icon danger" onclick="deleteChore(${c.id})" title="Delete"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+      </div>
+    </div>
+  `).join('') + '</div>';
+}
+
+// --- Calendar ---
+let calView = 'month';
+let calDate = new Date();
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function setCalView(v) {
+  calView = v;
+  document.querySelectorAll('.cal-view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  renderCalendar();
+}
+function calNav(dir) {
+  if (calView === 'month') calDate.setMonth(calDate.getMonth() + dir);
+  else calDate.setDate(calDate.getDate() + dir * 7);
+  renderCalendar();
+}
+function calToday() { calDate = new Date(); renderCalendar(); }
+
+function getCalItems() {
+  const fw = document.getElementById('filter-who').value;
+  let items = [];
+  events.forEach(e => {
+    if (fw && e.who !== fw) return;
+    items.push({ type:'event', date: e.date, title: e.event, time: e.time || '', loc: e.location || '', who: (e.who||'').toLowerCase(), id: e.id, notes: e.notes || '' });
+  });
+  return items;
+}
+
+function itemsByDate(items) {
+  const map = {};
+  items.forEach(it => { if (!it.date) return; (map[it.date] = map[it.date] || []).push(it); });
+  Object.values(map).forEach(arr => arr.sort((a,b) => (a.time||'').localeCompare(b.time||'')));
+  return map;
+}
+
+function renderCalendar() {
+  const items = getCalItems();
+  const map = itemsByDate(items);
+  if (calView === 'month') renderMonthView(map);
+  else renderWeekView(map);
+}
+
+function renderMonthView(map) {
+  const year = calDate.getFullYear(), month = calDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const prevDays = new Date(year, month, 0).getDate();
+  const todayS = todayStr();
+
+  document.getElementById('cal-title').textContent = MONTHS[month] + ' ' + year;
+
+  let html = '<div class="cal-grid"><div class="cal-header-row">';
+  DAYS.forEach(d => { html += '<div class="cal-header-cell">' + d + '</div>'; });
+  html += '</div><div class="cal-body">';
+
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+  for (let i = 0; i < totalCells; i++) {
+    let dayNum, dateStr, isOther = false;
+    if (i < firstDay) {
+      dayNum = prevDays - firstDay + i + 1;
+      const pm = month === 0 ? 11 : month - 1;
+      const py = month === 0 ? year - 1 : year;
+      dateStr = `${py}-${String(pm+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+      isOther = true;
+    } else if (i >= firstDay + daysInMonth) {
+      dayNum = i - firstDay - daysInMonth + 1;
+      const nm = month === 11 ? 0 : month + 1;
+      const ny = month === 11 ? year + 1 : year;
+      dateStr = `${ny}-${String(nm+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+      isOther = true;
+    } else {
+      dayNum = i - firstDay + 1;
+      dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+    }
+
+    const isToday = dateStr === todayS;
+    const cls = ['cal-day', isOther ? 'other-month' : '', isToday ? 'today' : ''].filter(Boolean).join(' ');
+    html += `<div class="${cls}" onclick="calDayClick('${dateStr}')">`;
+    html += `<div class="cal-day-num">${dayNum}</div>`;
+
+    const dayItems = map[dateStr] || [];
+    const maxShow = 3;
+    dayItems.slice(0, maxShow).forEach(it => {
+      const cls = it.type === 'chore' ? 'chore' : it.who;
+      const label = it.time ? fmtTime(it.time) + ' ' + esc(it.title) : esc(it.title);
+      html += `<div class="cal-event ${cls}" onclick="event.stopPropagation();${it.type==='event' ? 'editEvent('+it.id+')' : 'editChore('+it.id+')'}" title="${esc(it.title)}${it.loc ? ' — '+esc(it.loc) : ''}">${label}</div>`;
+    });
+    if (dayItems.length > maxShow) {
+      html += `<div class="cal-more">+${dayItems.length - maxShow} more</div>`;
+    }
+    html += '</div>';
+  }
+  html += '</div></div>';
+  document.getElementById('cal-container').innerHTML = html;
+}
+
+function renderWeekView(map) {
+  const startOfWeek = new Date(calDate);
+  const todayS = todayStr();
+
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const dt = new Date(startOfWeek);
+    dt.setDate(startOfWeek.getDate() + i);
+    dates.push(dt);
+  }
+
+  const s = dates[0], e = dates[6];
+  const title = s.getMonth() === e.getMonth()
+    ? MONTHS[s.getMonth()] + ' ' + s.getDate() + '–' + e.getDate() + ', ' + s.getFullYear()
+    : MONTHS[s.getMonth()].slice(0,3) + ' ' + s.getDate() + ' – ' + MONTHS[e.getMonth()].slice(0,3) + ' ' + e.getDate() + ', ' + e.getFullYear();
+  document.getElementById('cal-title').textContent = title;
+
+  const timeSlots = [
+    { label: '6 AM', start: 6, end: 9 },
+    { label: '9 AM', start: 9, end: 12 },
+    { label: '12 PM', start: 12, end: 15 },
+    { label: '3 PM', start: 15, end: 18 },
+    { label: '6 PM', start: 18, end: 21 },
+    { label: '9 PM', start: 21, end: 24 },
+  ];
+
+  function getSlotIndex(timeStr) {
+    if (!timeStr) return -1;
+    const hr = parseInt(timeStr.split(':')[0]);
+    for (let i = 0; i < timeSlots.length; i++) {
+      if (hr >= timeSlots[i].start && hr < timeSlots[i].end) return i;
+    }
+    return -1;
+  }
+
+  let html = '<div class="cal-week"><div class="cal-week-header">';
+  html += '<div class="cal-week-hcell time-label"></div>';
+  dates.forEach(dt => {
+    const ds = dt.toISOString().split('T')[0];
+    const isToday = ds === todayS;
+    html += `<div class="cal-week-hcell ${isToday?'today':''}"><div class="day-name">${DAYS[dt.getDay()]}</div><div class="day-num">${dt.getDate()}</div></div>`;
+  });
+  html += '</div><div class="cal-week-body">';
+
+  // Time column
+  html += '<div class="cal-week-time-col">';
+  timeSlots.forEach(slot => {
+    html += `<div class="cal-week-time-label">${slot.label}</div>`;
+  });
+  html += '</div>';
+
+  // Day columns
+  dates.forEach(dt => {
+    const ds = dt.toISOString().split('T')[0];
+    const isToday = ds === todayS;
+    const dayItems = map[ds] || [];
+
+    const slotItems = timeSlots.map(() => []);
+    const noTimeItems = [];
+    dayItems.forEach(it => {
+      const si = getSlotIndex(it.time);
+      if (si >= 0) slotItems[si].push(it);
+      else noTimeItems.push(it);
+    });
+    if (noTimeItems.length) noTimeItems.forEach(it => slotItems[0].push(it));
+
+    html += `<div class="cal-week-col ${isToday?'today':''}">`;
+    slotItems.forEach(items => {
+      html += '<div class="cal-week-slot">';
+      items.forEach(it => {
+        const cls = it.who || 'both';
+        const onclick = `editEvent(${it.id})`;
+        html += `<div class="cal-week-event ${cls}" onclick="${onclick}" title="${esc(it.title)}${it.loc ? ' — '+esc(it.loc) : ''}">`;
+        if (it.time) html += `<span class="ev-time">${fmtTime(it.time)}</span> `;
+        html += `${esc(it.title)}`;
+        html += '</div>';
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+
+  html += '</div></div>';
+  document.getElementById('cal-container').innerHTML = html;
+}
+
+function calDayClick(dateStr) {
+  document.getElementById('f-edate').value = dateStr;
+  openEventModal();
+}
+
+function quickAddEvent() {
+  const input = document.getElementById('quick-add-event');
+  const raw = input.value.trim();
+  if (!raw) return;
+
+  const text = raw;
+  const lower = text.toLowerCase();
+
+  // --- Parse date ---
+  let eventDate = '';
+  const today = new Date();
+  const dayNames = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const dayShort = ['sun','mon','tue','wed','thu','fri','sat'];
+
+  // "today" / "tomorrow"
+  if (/\btoday\b/i.test(lower)) {
+    eventDate = todayStr();
+  } else if (/\btomorrow\b/i.test(lower)) {
+    const dt = new Date(today); dt.setDate(dt.getDate() + 1);
+    eventDate = dt.toISOString().split('T')[0];
+  } else if (/\bday after tomorrow\b/i.test(lower)) {
+    const dt = new Date(today); dt.setDate(dt.getDate() + 2);
+    eventDate = dt.toISOString().split('T')[0];
+  }
+
+  // "this/next Saturday", "Saturday", "next week"
+  if (!eventDate) {
+    const isNext = /\bnext\b/i.test(lower);
+    for (let i = 0; i < 7; i++) {
+      const re = new RegExp('\\b' + dayNames[i] + '\\b|\\b' + dayShort[i] + '\\b', 'i');
+      if (re.test(lower)) {
+        const dt = new Date(today);
+        let diff = i - dt.getDay();
+        if (diff <= 0) diff += 7;
+        if (isNext && diff <= 7) diff += 7;
+        dt.setDate(dt.getDate() + diff);
+        eventDate = dt.toISOString().split('T')[0];
+        break;
+      }
+    }
+  }
+
+  // "June 25", "Jun 25", "25 June", "6/25", "25th"
+  if (!eventDate) {
+    const monthNames = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+    const monthShort = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    let m1 = lower.match(/(\w+)\s+(\d{1,2})(?:st|nd|rd|th)?(?:\s|,|$)/);
+    let m2 = lower.match(/(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?(\w+)/);
+    let m3 = lower.match(/(\d{1,2})\/(\d{1,2})/);
+    if (m1) {
+      const mi = monthNames.indexOf(m1[1]) !== -1 ? monthNames.indexOf(m1[1]) : monthShort.indexOf(m1[1]);
+      if (mi !== -1) {
+        const dt = new Date(today.getFullYear(), mi, parseInt(m1[2]));
+        if (dt < today) dt.setFullYear(dt.getFullYear() + 1);
+        eventDate = dt.toISOString().split('T')[0];
+      }
+    } else if (m2) {
+      const mi = monthNames.indexOf(m2[2]) !== -1 ? monthNames.indexOf(m2[2]) : monthShort.indexOf(m2[2]);
+      if (mi !== -1) {
+        const dt = new Date(today.getFullYear(), mi, parseInt(m2[1]));
+        if (dt < today) dt.setFullYear(dt.getFullYear() + 1);
+        eventDate = dt.toISOString().split('T')[0];
+      }
+    } else if (m3) {
+      const dt = new Date(today.getFullYear(), parseInt(m3[1]) - 1, parseInt(m3[2]));
+      if (dt < today) dt.setFullYear(dt.getFullYear() + 1);
+      eventDate = dt.toISOString().split('T')[0];
+    }
+  }
+
+  if (!eventDate) {
+    const dt = new Date(today); dt.setDate(dt.getDate() + 1);
+    eventDate = dt.toISOString().split('T')[0];
+  }
+
+  // --- Parse time ---
+  let eventTime = '';
+  const tm = lower.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i) || lower.match(/\bat\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+  if (tm) {
+    let hr = parseInt(tm[1]);
+    const min = tm[2] || '00';
+    const ampm = (tm[3] || '').toLowerCase();
+    if (ampm === 'pm' && hr < 12) hr += 12;
+    if (ampm === 'am' && hr === 12) hr = 0;
+    if (!ampm && hr < 8) hr += 12;
+    eventTime = String(hr).padStart(2, '0') + ':' + min;
+  }
+  // Named times
+  if (!eventTime) {
+    if (/\bmorning\b/i.test(lower)) eventTime = '10:00';
+    else if (/\blunch\b/i.test(lower)) eventTime = '12:00';
+    else if (/\bafternoon\b/i.test(lower)) eventTime = '14:00';
+    else if (/\bevening\b/i.test(lower)) eventTime = '18:00';
+    else if (/\bnight\b/i.test(lower)) eventTime = '20:00';
+    else if (/\bbrunch\b/i.test(lower)) eventTime = '11:00';
+    else if (/\bdinner\b/i.test(lower)) eventTime = '19:00';
+    else if (/\bcoffee\b/i.test(lower)) eventTime = '10:00';
+    else if (/\bdrinks\b/i.test(lower)) eventTime = '18:00';
+  }
+
+  // --- Parse location (after "at" / "in" / "@") ---
+  let eventLoc = '';
+  const locMatch = text.match(/\b(?:at|@|in)\s+(.+?)(?:\s+(?:on|this|next|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d{1,2}(?:am|pm|:\d{2}))|\s*$)/i);
+  if (locMatch) {
+    eventLoc = locMatch[1].replace(/\s+(morning|afternoon|evening|night|lunch|dinner|brunch)$/i, '').trim();
+  }
+
+  // --- Parse "with" person → becomes the event title ---
+  let eventTitle = '';
+  const withMatch = text.match(/\bwith\s+(.+?)(?:\s+(?:at|@|in|on|this|next|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d{1,2}(?:am|pm|:\d{2})))/i);
+  if (withMatch) {
+    eventTitle = withMatch[1].trim();
+  } else {
+    const withEnd = text.match(/\bwith\s+(.+)$/i);
+    if (withEnd) eventTitle = withEnd[1].replace(/\s+(?:at|@|in)\s+.*/i, '').trim();
+  }
+
+  // Build title: use activity + person, or fallback to cleaned input
+  let activity = '';
+  if (/\bdinner\b/i.test(lower)) activity = 'Dinner';
+  else if (/\blunch\b/i.test(lower)) activity = 'Lunch';
+  else if (/\bbrunch\b/i.test(lower)) activity = 'Brunch';
+  else if (/\bcoffee\b/i.test(lower)) activity = 'Coffee';
+  else if (/\bdrinks\b/i.test(lower)) activity = 'Drinks';
+  else if (/\bmovie\b/i.test(lower)) activity = 'Movie';
+  else if (/\bplaydate\b/i.test(lower)) activity = 'Playdate';
+  else if (/\bparty\b/i.test(lower)) activity = 'Party';
+  else if (/\bmeeting\b|meet\b/i.test(lower)) activity = 'Meetup';
+
+  let finalTitle = '';
+  if (activity && eventTitle) finalTitle = activity + ' with ' + eventTitle;
+  else if (eventTitle) finalTitle = 'Plans with ' + eventTitle;
+  else if (activity) finalTitle = activity;
+  else {
+    finalTitle = raw.replace(/\b(at|@|in|on|this|next|today|tomorrow|morning|afternoon|evening|night)\b.*$/i, '').trim() || raw;
+  }
+
+  const evt = {
+    id: nextId(events),
+    event: finalTitle,
+    date: eventDate,
+    time: eventTime,
+    location: eventLoc,
+    who: 'Both',
+    notes: ''
+  };
+  events.push(evt);
+  save(LS_EVENTS, events);
+  input.value = '';
+  renderAll();
+}
+
+function renderEvents() { renderCalendar(); }
+
+// --- Tab switching ---
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+}
+
+// --- Modals ---
+function openChoreModal(chore) {
+  document.getElementById('chore-modal-title').textContent = chore ? 'Edit task' : 'Add task';
+  document.getElementById('chore-edit-id').value = chore ? chore.id : '';
+  document.getElementById('f-task').value = chore ? chore.task : '';
+  document.getElementById('f-cat').value = chore ? chore.category : 'Household';
+  document.getElementById('f-owner').value = chore ? chore.owner : 'Surbhi';
+  document.getElementById('f-due').value = chore ? chore.due : todayStr();
+  document.getElementById('f-crit').value = chore ? chore.criticality : '3';
+  document.getElementById('f-status').value = chore ? chore.status : 'To Do';
+  document.getElementById('f-notes').value = chore ? chore.notes : '';
+  document.getElementById('chore-modal').classList.add('show');
+}
+function openEventModal(evt) {
+  document.getElementById('event-modal-title').textContent = evt ? 'Edit event' : 'Add event';
+  document.getElementById('event-edit-id').value = evt ? evt.id : '';
+  document.getElementById('f-event').value = evt ? evt.event : '';
+  document.getElementById('f-edate').value = evt ? evt.date : todayStr();
+  document.getElementById('f-etime').value = evt ? evt.time : '';
+  document.getElementById('f-eloc').value = evt ? evt.location : '';
+  document.getElementById('f-ewho').value = evt ? evt.who : 'Surbhi';
+  document.getElementById('f-enotes').value = evt ? evt.notes : '';
+  document.getElementById('event-modal').classList.add('show');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+async function saveChore() {
+  const task = document.getElementById('f-task').value.trim();
+  if (!task) return;
+  const editId = document.getElementById('chore-edit-id').value;
+  const data = {
+    task, category: document.getElementById('f-cat').value, owner: document.getElementById('f-owner').value,
+    due: document.getElementById('f-due').value, criticality: parseInt(document.getElementById('f-crit').value),
+    status: document.getElementById('f-status').value, notes: document.getElementById('f-notes').value.trim()
+  };
+  if (editId) {
+    const idx = chores.findIndex(c => c.id === parseInt(editId));
+    if (idx >= 0) {
+      const old = chores[idx];
+      chores[idx] = { ...old, ...data };
+      save(LS_CHORES, chores);
+      pushChore('update', chores[idx], old._rowIndex || old.id);
+    }
+  } else {
+    data.id = nextId(chores);
+    chores.push(data);
+    save(LS_CHORES, chores);
+    const res = await pushChore('add', data);
+    if (res && res.rowIndex) { data._rowIndex = res.rowIndex; save(LS_CHORES, chores); }
+  }
+  closeModal('chore-modal');
+  renderAll();
+}
+
+async function saveEvent() {
+  const event = document.getElementById('f-event').value.trim();
+  if (!event) return;
+  const editId = document.getElementById('event-edit-id').value;
+  const data = {
+    event, date: document.getElementById('f-edate').value, time: document.getElementById('f-etime').value,
+    location: document.getElementById('f-eloc').value.trim(), who: document.getElementById('f-ewho').value,
+    notes: document.getElementById('f-enotes').value.trim()
+  };
+  if (editId) {
+    const idx = events.findIndex(e => e.id === parseInt(editId));
+    if (idx >= 0) {
+      const old = events[idx];
+      events[idx] = { ...old, ...data };
+      save(LS_EVENTS, events);
+      pushEvent('update', events[idx], old._rowIndex || old.id);
+    }
+  } else {
+    data.id = nextId(events);
+    events.push(data);
+    save(LS_EVENTS, events);
+    const res = await pushEvent('add', data);
+    if (res && res.rowIndex) { data._rowIndex = res.rowIndex; save(LS_EVENTS, events); }
+  }
+  closeModal('event-modal');
+  renderAll();
+}
+
+function editChore(id) { openChoreModal(chores.find(c => c.id === id)); }
+function editEvent(id) { openEventModal(events.find(e => e.id === id)); }
+
+async function deleteChore(id) {
+  if (!confirm('Delete this task?')) return;
+  const c = chores.find(c => c.id === id);
+  chores = chores.filter(c => c.id !== id);
+  save(LS_CHORES, chores);
+  if (c) pushChore('delete', c, c._rowIndex || c.id);
+  renderAll();
+}
+async function deleteEvent(id) {
+  if (!confirm('Delete this event?')) return;
+  const e = events.find(e => e.id === id);
+  events = events.filter(e => e.id !== id);
+  save(LS_EVENTS, events);
+  if (e) pushEvent('delete', e, e._rowIndex || e.id);
+  renderAll();
+}
+async function markDone(id) {
+  const c = chores.find(c => c.id === id);
+  if (!c) return;
+  c.status = 'Done';
+  save(LS_CHORES, chores);
+  pushChore('update', c, c._rowIndex || c.id);
+  renderAll();
+}
+
+function toggleSettings() { document.getElementById('settings-panel').classList.toggle('show'); }
+
+// --- Orders ---
+function quickAddOrder() {
+  const input = document.getElementById('quick-add-order');
+  const item = input.value.trim();
+  if (!item) return;
+  const order = { id: nextId(orders), item, category: 'Other', priority: 'medium', where: '', status: 'pending', price: '', owner: 'Surbhi', notes: '' };
+  orders.push(order);
+  save(LS_ORDERS, orders);
+  input.value = '';
+  renderAll();
+}
+
+function quickAddGrocery() {
+  const input = document.getElementById('quick-add-grocery');
+  const item = input.value.trim();
+  if (!item) return;
+  const order = { id: nextId(orders), item, category: 'Grocery', priority: 'medium', where: '', status: 'pending', price: '', owner: 'Surbhi', notes: '' };
+  orders.push(order);
+  save(LS_ORDERS, orders);
+  input.value = '';
+  renderAll();
+}
+
+function sortOrders(list) {
+  return list.sort((a, b) => {
+    const pri = { high: 0, medium: 1, low: 2 };
+    const sa = { pending: 0, ordered: 1, delivered: 2 };
+    if (sa[a.status] !== sa[b.status]) return sa[a.status] - sa[b.status];
+    return (pri[a.priority]||1) - (pri[b.priority]||1);
+  });
+}
+
+function toggleOrderDone(id) {
+  const o = orders.find(o => o.id === id);
+  if (!o) return;
+  o.status = o.status === 'delivered' ? 'pending' : 'delivered';
+  save(LS_ORDERS, orders);
+  renderAll();
+}
+
+function renderOrderCard(o) {
+  const isDone = o.status === 'delivered';
+  return `
+  <div class="task-card ${isDone?'done-row':''}" style="grid-template-columns:auto 1fr auto">
+    <div onclick="toggleOrderDone(${o.id})" style="cursor:pointer;display:flex;align-items:center">
+      <div style="width:20px;height:20px;border-radius:50%;border:2px solid ${isDone?'var(--green)':'var(--grey-3)'};display:flex;align-items:center;justify-content:center;background:${isDone?'var(--green)':'transparent'};transition:var(--transition)">
+        ${isDone ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}
+      </div>
+    </div>
+    <div class="task-left">
+      <div class="task-top">
+        <span class="task-name">${esc(o.item)}</span>
+      </div>
+      <div class="task-meta">
+        ${o.where ? `<span class="date-text">${esc(o.where)}</span>` : ''}
+        ${o.price ? `<span class="date-text" style="font-weight:600">${esc(o.price)}</span>` : ''}
+        ${o.notes ? `<span class="notes-text">${esc(o.notes)}</span>` : ''}
+      </div>
+    </div>
+    <div class="task-right">
+      <button class="btn-icon" onclick="editOrder(${o.id})" title="Edit"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+      <button class="btn-icon danger" onclick="deleteOrder(${o.id})" title="Delete"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+    </div>
+  </div>`;
+}
+
+function renderOrders() {
+  const grocery = sortOrders(orders.filter(o => o.category === 'Grocery'));
+  const nonGrocery = sortOrders(orders.filter(o => o.category !== 'Grocery'));
+
+  const ngEl = document.getElementById('order-list-nongrocery');
+  if (!nonGrocery.length) {
+    ngEl.innerHTML = '<div style="text-align:center;padding:30px 10px;color:var(--grey-2);font-size:13px">No items yet</div>';
+  } else {
+    ngEl.innerHTML = '<div class="task-list">' + nonGrocery.map(renderOrderCard).join('') + '</div>';
+  }
+
+  const gEl = document.getElementById('order-list-grocery');
+  if (!grocery.length) {
+    gEl.innerHTML = '<div style="text-align:center;padding:30px 10px;color:var(--grey-2);font-size:13px">No groceries yet</div>';
+  } else {
+    gEl.innerHTML = '<div class="task-list">' + grocery.map(renderOrderCard).join('') + '</div>';
+  }
+}
+
+function openOrderModal(order) {
+  document.getElementById('order-modal-title').textContent = order ? 'Edit item' : 'Add item';
+  document.getElementById('order-edit-id').value = order ? order.id : '';
+  document.getElementById('f-oitem').value = order ? order.item : '';
+  document.getElementById('f-ocat').value = order ? order.category : 'Baby & Kids';
+  document.getElementById('f-opri').value = order ? order.priority : 'medium';
+  document.getElementById('f-owhere').value = order ? order.where : '';
+  document.getElementById('f-ostatus').value = order ? order.status : 'pending';
+  document.getElementById('f-oprice').value = order ? order.price : '';
+  document.getElementById('f-oowner').value = order ? order.owner : 'Surbhi';
+  document.getElementById('f-onotes').value = order ? order.notes : '';
+  document.getElementById('order-modal').classList.add('show');
+}
+
+function saveOrder() {
+  const item = document.getElementById('f-oitem').value.trim();
+  if (!item) return;
+  const editId = document.getElementById('order-edit-id').value;
+  const data = {
+    item, category: document.getElementById('f-ocat').value, priority: document.getElementById('f-opri').value,
+    where: document.getElementById('f-owhere').value.trim(), status: document.getElementById('f-ostatus').value,
+    price: document.getElementById('f-oprice').value.trim(), owner: document.getElementById('f-oowner').value,
+    notes: document.getElementById('f-onotes').value.trim()
+  };
+  if (editId) {
+    const idx = orders.findIndex(o => o.id === parseInt(editId));
+    if (idx >= 0) orders[idx] = { ...orders[idx], ...data };
+  } else {
+    data.id = nextId(orders);
+    orders.push(data);
+  }
+  save(LS_ORDERS, orders);
+  closeModal('order-modal');
+  renderAll();
+}
+
+function editOrder(id) { openOrderModal(orders.find(o => o.id === id)); }
+function deleteOrder(id) { if (confirm('Delete this item?')) { orders = orders.filter(o => o.id !== id); save(LS_ORDERS, orders); renderAll(); } }
+function markOrdered(id) { const o = orders.find(o => o.id === id); if (o) { o.status = 'ordered'; save(LS_ORDERS, orders); renderAll(); } }
+function markDelivered(id) { const o = orders.find(o => o.id === id); if (o) { o.status = 'delivered'; save(LS_ORDERS, orders); renderAll(); } }
+
+function renderAll() { renderStats(); renderChores(); renderEvents(); renderOrders(); }
+
+// Close modals on overlay click
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+// Close settings on outside click
+document.addEventListener('click', e => {
+  const panel = document.getElementById('settings-panel');
+  const btn = document.querySelector('.settings-btn');
+  if (panel.classList.contains('show') && !panel.contains(e.target) && !btn.contains(e.target)) panel.classList.remove('show');
+});
+
+// Populate category filter
+const catSel = document.getElementById('filter-cat');
+CATS.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o); });
+const oCatSel = document.getElementById('filter-order-cat');
+ORDER_CATS.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; oCatSel.appendChild(o); });
+
+// Init
+document.getElementById('script-url').value = scriptUrl;
+if (scriptUrl) updateSyncStatus(true);
+renderAll();
+if (scriptUrl) syncNow();
+</script>
+</body>
+</html>
