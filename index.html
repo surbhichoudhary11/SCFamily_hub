@@ -246,16 +246,44 @@
   @media (max-width: 600px) {
     .header-inner { height: 56px; }
     .logo-text { font-size: 16px; }
-    .main { padding: 16px; }
+    .main { padding: 10px; }
     .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .stat-card { padding: 14px; }
     .stat-number { font-size: 26px; }
-    .task-card { padding: 14px 16px; }
+    .task-card { padding: 12px 14px; }
     .task-meta { gap: 6px; }
     .notes-text { max-width: 150px; }
     .field-row { grid-template-columns: 1fr; }
     .settings-panel { right: 8px; left: 8px; width: auto; }
-    .tabs-inner { gap: 24px; }
+    .tabs-inner { gap: 16px; }
+    .tab { font-size: 13px; }
+
+    /* Calendar mobile fixes */
+    .cal-toolbar { flex-wrap: wrap; gap: 8px; }
+    .cal-nav { width: 100%; justify-content: center; }
+    .cal-title { font-size: 16px; }
+    .cal-view-toggle { margin-left: 0; }
+    .cal-view-btn { padding: 5px 10px; font-size: 11px; }
+    .cal-today-btn { font-size: 11px; padding: 5px 10px; }
+
+    .cal-day { min-height: 50px; padding: 2px; }
+    .cal-day-num { font-size: 10px; width: 18px; height: 18px; }
+    .cal-event { font-size: 8px; padding: 1px 2px; }
+    .cal-header-cell { font-size: 9px; padding: 6px 2px; letter-spacing: 0; }
+
+    .cal-week-header, .cal-week-body { grid-template-columns: 40px repeat(7, 1fr) !important; }
+    .cal-week-hcell .day-name { font-size: 9px; }
+    .cal-week-hcell .day-num { font-size: 16px; }
+    .cal-week-time-label { font-size: 8px; padding: 2px 4px; height: 50px; }
+    .cal-week-slot { height: 50px; padding: 1px 2px; }
+    .cal-week-event { font-size: 9px; padding: 2px 3px; }
+    .cal-week-event .ev-time { font-size: 8px; }
+    .cal-week-event .ev-loc { font-size: 7px; }
+
+    /* Orders two-column → stacked on mobile */
+    #tab-orders > div { grid-template-columns: 1fr !important; }
+
+    .filter-pill { font-size: 11px; padding: 5px 8px; }
   }
 </style>
 </head>
@@ -349,8 +377,9 @@
       <button class="cal-today-btn" onclick="calToday()">Today</button>
       <select class="filter-pill" id="filter-who" onchange="renderCalendar()"><option value="">Everyone</option><option>Surbhi</option><option>Ishan</option><option>Both</option></select>
       <div class="cal-view-toggle">
-        <button class="cal-view-btn active" data-view="month" onclick="setCalView('month')">Month</button>
+        <button class="cal-view-btn" data-view="month" onclick="setCalView('month')">Month</button>
         <button class="cal-view-btn" data-view="week" onclick="setCalView('week')">Week</button>
+        <button class="cal-view-btn active" data-view="3day" onclick="setCalView('3day')">3 Day</button>
       </div>
     </div>
     <div id="cal-container"></div>
@@ -793,7 +822,7 @@ function renderChores() {
 }
 
 // --- Calendar ---
-let calView = 'month';
+let calView = '3day';
 let calDate = new Date();
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -805,6 +834,7 @@ function setCalView(v) {
 }
 function calNav(dir) {
   if (calView === 'month') calDate.setMonth(calDate.getMonth() + dir);
+  else if (calView === '3day') calDate.setDate(calDate.getDate() + dir * 3);
   else calDate.setDate(calDate.getDate() + dir * 7);
   renderCalendar();
 }
@@ -831,6 +861,7 @@ function renderCalendar() {
   const items = getCalItems();
   const map = itemsByDate(items);
   if (calView === 'month') renderMonthView(map);
+  else if (calView === '3day') renderDayView(map, 3);
   else renderWeekView(map);
 }
 
@@ -963,6 +994,90 @@ function renderWeekView(map) {
         html += `<div class="cal-week-event ${cls}" onclick="${onclick}" title="${esc(it.title)}${it.loc ? ' — '+esc(it.loc) : ''}">`;
         if (it.time) html += `<span class="ev-time">${fmtTime(it.time)}</span> `;
         html += `${esc(it.title)}`;
+        html += '</div>';
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+
+  html += '</div></div>';
+  document.getElementById('cal-container').innerHTML = html;
+}
+
+function renderDayView(map, numDays) {
+  const startOfRange = new Date(calDate);
+  const todayS = todayStr();
+  const dates = [];
+  for (let i = 0; i < numDays; i++) {
+    const dt = new Date(startOfRange);
+    dt.setDate(startOfRange.getDate() + i);
+    dates.push(dt);
+  }
+
+  const s = dates[0], e = dates[numDays - 1];
+  const title = s.getMonth() === e.getMonth()
+    ? MONTHS[s.getMonth()] + ' ' + s.getDate() + '–' + e.getDate() + ', ' + s.getFullYear()
+    : MONTHS[s.getMonth()].slice(0,3) + ' ' + s.getDate() + ' – ' + MONTHS[e.getMonth()].slice(0,3) + ' ' + e.getDate() + ', ' + e.getFullYear();
+  document.getElementById('cal-title').textContent = title;
+
+  const timeSlots = [
+    { label: '6 AM', start: 6, end: 9 },
+    { label: '9 AM', start: 9, end: 12 },
+    { label: '12 PM', start: 12, end: 15 },
+    { label: '3 PM', start: 15, end: 18 },
+    { label: '6 PM', start: 18, end: 21 },
+    { label: '9 PM', start: 21, end: 24 },
+  ];
+
+  function getSlotIndex(timeStr) {
+    if (!timeStr) return -1;
+    const hr = parseInt(timeStr.split(':')[0]);
+    for (let i = 0; i < timeSlots.length; i++) {
+      if (hr >= timeSlots[i].start && hr < timeSlots[i].end) return i;
+    }
+    return -1;
+  }
+
+  let html = `<div class="cal-week"><div class="cal-week-header" style="grid-template-columns:56px repeat(${numDays}, 1fr)">`;
+  html += '<div class="cal-week-hcell time-label"></div>';
+  dates.forEach(dt => {
+    const ds = dt.toISOString().split('T')[0];
+    const isToday = ds === todayS;
+    html += `<div class="cal-week-hcell ${isToday?'today':''}"><div class="day-name">${DAYS[dt.getDay()]}</div><div class="day-num">${dt.getDate()}</div></div>`;
+  });
+  html += `</div><div class="cal-week-body" style="grid-template-columns:56px repeat(${numDays}, 1fr)">`;
+
+  html += '<div class="cal-week-time-col">';
+  timeSlots.forEach(slot => {
+    html += `<div class="cal-week-time-label">${slot.label}</div>`;
+  });
+  html += '</div>';
+
+  dates.forEach(dt => {
+    const ds = dt.toISOString().split('T')[0];
+    const isToday = ds === todayS;
+    const dayItems = map[ds] || [];
+
+    const slotItems = timeSlots.map(() => []);
+    const noTimeItems = [];
+    dayItems.forEach(it => {
+      const si = getSlotIndex(it.time);
+      if (si >= 0) slotItems[si].push(it);
+      else noTimeItems.push(it);
+    });
+    if (noTimeItems.length) noTimeItems.forEach(it => slotItems[0].push(it));
+
+    html += `<div class="cal-week-col ${isToday?'today':''}">`;
+    slotItems.forEach(items => {
+      html += '<div class="cal-week-slot">';
+      items.forEach(it => {
+        const cls = it.who || 'both';
+        const onclick = `editEvent(${it.id})`;
+        html += `<div class="cal-week-event ${cls}" onclick="${onclick}" title="${esc(it.title)}${it.loc ? ' — '+esc(it.loc) : ''}">`;
+        if (it.time) html += `<span class="ev-time">${fmtTime(it.time)}</span> `;
+        html += `${esc(it.title)}`;
+        if (it.loc) html += `<div class="ev-loc">${esc(it.loc)}</div>`;
         html += '</div>';
       });
       html += '</div>';
