@@ -659,6 +659,23 @@ async function syncNow() {
     save(LS_EVENTS, events);
   }
 
+  const orderData = await apiCall({ action: 'getOrders' });
+  if (orderData && orderData.rows) {
+    orders = orderData.rows.map((r, i) => ({
+      id: r._rowIndex,
+      item: r['Item'] || '',
+      category: r['Category'] || 'Other',
+      priority: r['Priority'] || 'medium',
+      where: r['Where'] || '',
+      status: r['Status'] || 'pending',
+      price: r['Price'] || '',
+      owner: r['Owner'] || 'Surbhi',
+      notes: r['Notes'] || '',
+      _rowIndex: r._rowIndex
+    }));
+    save(LS_ORDERS, orders);
+  }
+
   updateSyncStatus(true);
   showMsg('Synced successfully!');
   renderAll();
@@ -678,6 +695,14 @@ async function pushEvent(action, evt, rowIndex) {
   if (action === 'add') return await apiCall({ action: 'addEvent', data });
   if (action === 'update') return await apiCall({ action: 'updateEvent', rowIndex, data });
   if (action === 'delete') return await apiCall({ action: 'deleteEvent', rowIndex });
+}
+
+async function pushOrder(action, order, rowIndex) {
+  if (!scriptUrl) return;
+  const data = { 'Item': order.item, 'Category': order.category, 'Priority': order.priority, 'Where': order.where, 'Status': order.status, 'Price': order.price, 'Owner': order.owner, 'Notes': order.notes };
+  if (action === 'add') return await apiCall({ action: 'addOrder', data });
+  if (action === 'update') return await apiCall({ action: 'updateOrder', rowIndex, data });
+  if (action === 'delete') return await apiCall({ action: 'deleteOrder', rowIndex });
 }
 
 function showMsg(msg, isError) {
@@ -1241,6 +1266,7 @@ function quickAddOrder() {
   save(LS_ORDERS, orders);
   input.value = '';
   renderAll();
+  pushOrder('add', order);
 }
 
 function quickAddGrocery() {
@@ -1252,6 +1278,7 @@ function quickAddGrocery() {
   save(LS_ORDERS, orders);
   input.value = '';
   renderAll();
+  pushOrder('add', order);
 }
 
 function sortOrders(list) {
@@ -1269,6 +1296,7 @@ function toggleOrderDone(id) {
   o.status = o.status === 'delivered' ? 'pending' : 'delivered';
   save(LS_ORDERS, orders);
   renderAll();
+  pushOrder('update', o, o._rowIndex);
 }
 
 function renderOrderCard(o) {
@@ -1342,18 +1370,25 @@ function saveOrder() {
   };
   if (editId) {
     const idx = orders.findIndex(o => o.id === parseInt(editId));
-    if (idx >= 0) orders[idx] = { ...orders[idx], ...data };
+    if (idx >= 0) {
+      orders[idx] = { ...orders[idx], ...data };
+      save(LS_ORDERS, orders);
+      closeModal('order-modal');
+      renderAll();
+      pushOrder('update', orders[idx], orders[idx]._rowIndex);
+    }
   } else {
     data.id = nextId(orders);
     orders.push(data);
+    save(LS_ORDERS, orders);
+    closeModal('order-modal');
+    renderAll();
+    pushOrder('add', data);
   }
-  save(LS_ORDERS, orders);
-  closeModal('order-modal');
-  renderAll();
 }
 
 function editOrder(id) { openOrderModal(orders.find(o => o.id === id)); }
-function deleteOrder(id) { if (confirm('Delete this item?')) { orders = orders.filter(o => o.id !== id); save(LS_ORDERS, orders); renderAll(); } }
+function deleteOrder(id) { if (confirm('Delete this item?')) { const o = orders.find(o => o.id === id); const rowIdx = o ? o._rowIndex : null; orders = orders.filter(o => o.id !== id); save(LS_ORDERS, orders); renderAll(); if (rowIdx) pushOrder('delete', null, rowIdx); } }
 function markOrdered(id) { const o = orders.find(o => o.id === id); if (o) { o.status = 'ordered'; save(LS_ORDERS, orders); renderAll(); } }
 function markDelivered(id) { const o = orders.find(o => o.id === id); if (o) { o.status = 'delivered'; save(LS_ORDERS, orders); renderAll(); } }
 
